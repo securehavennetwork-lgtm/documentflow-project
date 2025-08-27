@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocumentFlow - Sistema de Gestión de Archivos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#2563eb',
+                    secondary: '#059669', 
+                    accent: '#dc2626',
+                    neutral: '#1f2937'
+                },
+                fontFamily: {
+                    'sans': ['Inter', 'system-ui', 'sans-serif']
+                }
+            }
+        }
+    };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+
+<!-- @COMPONENT: AuthenticationModal -->
+<div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-cloud-upload-alt text-white text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">DocumentFlow</h2>
+            <p class="text-gray-600">Sistema de gestión de archivos inteligente</p>
+        </div>
+        
+        <!-- Login Form -->
+        <div id="loginForm">
+            <form class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="usuario@empresa.com" data-mock="true">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="••••••••" data-mock="true">
+                </div>
+                <button type="button" onclick="showDashboard()" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200" data-event="click:handleLogin">
+                    Iniciar Sesión
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <button onclick="showRegister()" class="text-primary hover:underline">¿No tienes cuenta? Regístrate</button>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="hidden">
+            <form class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Juan" data-mock="true">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Pérez" data-mock="true">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="juan.perez@empresa.com" data-mock="true">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="+52 55 1234 5678" data-mock="true">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" data-mock="true">
+                        <option>Recursos Humanos</option>
+                        <option>Finanzas</option>
+                        <option>IT</option>
+                        <option>Marketing</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="••••••••" data-mock="true">
+                </div>
+                <button type="button" onclick="showDashboard()" class="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200 text-sm" data-event="click:handleRegister">
+                    Crear Cuenta
+                </button>
+            </form>
+            <div class="mt-4 text-center">
+                <button onclick="showLogin()" class="text-primary hover:underline text-sm">¿Ya tienes cuenta? Inicia sesión</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- @END_COMPONENT: AuthenticationModal -->
+
+<!-- @COMPONENT: MainApplication -->
+<div id="mainApp" class="hidden min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button id="toggleSidebar" class="lg:hidden text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cloud-upload-alt text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900">DocumentFlow</h1>
+                    </div>
+                </div>
+                
+                <!-- User Profile -->
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center" data-bind="notificationCount">3</span>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-medium" data-bind="user.initials">JP</span>
+                        </div>
+                        <div class="hidden md:block">
+                            <p class="text-sm font-medium text-gray-900" data-bind="user.name">Juan Pérez</p>
+                            <p class="text-xs text-gray-600" data-bind="user.role">Usuario</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out w-64 bg-white shadow-lg z-30 mt-16 lg:mt-0">
+            <nav class="h-full px-4 py-6 space-y-2">
+                <a href="#" onclick="showSection('dashboard')" class="nav-link active flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-tachometer-alt text-lg"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="#" onclick="showSection('upload')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-cloud-upload-alt text-lg"></i>
+                    <span class="font-medium">Subir Archivos</span>
+                </a>
+                <a href="#" onclick="showSection('documents')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-folder-open text-lg"></i>
+                    <span class="font-medium">Mis Documentos</span>
+                </a>
+                <a href="#" onclick="showSection('deadlines')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-calendar-alt text-lg"></i>
+                    <span class="font-medium">Fechas Límite</span>
+                </a>
+                <a href="#" onclick="showSection('notifications')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-bell text-lg"></i>
+                    <span class="font-medium">Notificaciones</span>
+                </a>
+                
+                <!-- Admin Only -->
+                <div class="pt-4 border-t border-gray-200" data-role="admin">
+                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Administración</p>
+                    <a href="#" onclick="showSection('admin-dashboard')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-chart-line text-lg"></i>
+                        <span class="font-medium">Estadísticas</span>
+                    </a>
+                    <a href="#" onclick="showSection('user-management')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-users text-lg"></i>
+                        <span class="font-medium">Gestión de Usuarios</span>
+                    </a>
+                    <a href="#" onclick="showSection('reminders')" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-clock text-lg"></i>
+                        <span class="font-medium">Recordatorios</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-0 p-6">
+            
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="content-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Bienvenido, <span data-bind="user.firstName">Juan</span></h2>
+                    <p class="text-gray-600">Aquí tienes un resumen de tu actividad y próximas fechas límite</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Documentos Subidos</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" data-bind="stats.uploaded">12</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Pendientes</p>
+                                <p class="text-3xl font-bold text-orange-600 mt-2" data-bind="stats.pending">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-clock text-orange-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Próximas Fechas</p>
+                                <p class="text-3xl font-bold text-red-600 mt-2" data-bind="stats.upcoming">2</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Tasa de Cumplimiento</p>
+                                <p class="text-3xl font-bold text-primary mt-2" data-bind="stats.compliance">85%</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-chart-pie text-primary text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Upcoming Deadlines -->
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Actividad Reciente</h3>
+                        <div class="space-y-4">
+                            <!-- @MAP: recentActivity.map(activity => ( -->
+                            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-upload text-green-600 text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" data-bind="activity.title">Contrato de Trabajo subido</p>
+                                    <p class="text-xs text-gray-600 mt-1" data-bind="activity.time">Hace 2 horas</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-camera text-blue-600 text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" data-bind="activity.title">Foto de cédula capturada</p>
+                                    <p class="text-xs text-gray-600 mt-1" data-bind="activity.time">Hace 1 día</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                                <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-bell text-orange-600 text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900" data-bind="activity.title">Recordatorio enviado - RFC</p>
+                                    <p class="text-xs text-gray-600 mt-1" data-bind="activity.time">Hace 2 días</p>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Deadlines -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Próximas Fechas Límite</h3>
+                        <div class="space-y-4">
+                            <!-- @MAP: upcomingDeadlines.map(deadline => ( -->
+                            <div class="border border-red-200 bg-red-50 rounded-xl p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-medium text-gray-900" data-bind="deadline.title">Certificado de Estudios</h4>
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium" data-bind="deadline.urgency">Urgente</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3" data-bind="deadline.description">Subir título universitario o certificado de estudios</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-red-600 font-medium" data-bind="deadline.dueDate">Vence: 15 Nov 2024</span>
+                                    <button class="text-xs bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700" data-event="click:uploadDocument">
+                                        Subir Ahora
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="border border-orange-200 bg-orange-50 rounded-xl p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-medium text-gray-900" data-bind="deadline.title">Comprobante de Domicilio</h4>
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium" data-bind="deadline.urgency">5 días</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3" data-bind="deadline.description">Recibo de luz, agua o gas no mayor a 3 meses</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-orange-600 font-medium" data-bind="deadline.dueDate">Vence: 20 Nov 2024</span>
+                                    <button class="text-xs bg-orange-600 text-white px-3 py-1 rounded-full hover:bg-orange-700" data-event="click:uploadDocument">
+                                        Subir Ahora
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section id="upload-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Subir Archivos</h2>
+                    <p class="text-gray-600">Arrastra y suelta tus archivos o usa la cámara para capturar documentos</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- File Upload Area -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Subir desde Dispositivo</h3>
+                        
+                        <!-- Drag & Drop Zone -->
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors duration-200" id="dropzone">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl"></i>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-900 mb-2">Arrastra tus archivos aquí</h4>
+                            <p class="text-gray-600 mb-4">o haz clic para seleccionar</p>
+                            <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.mp4,.mov" class="hidden" data-implementation="Handle file upload with validation">
+                            <button onclick="document.getElementById('fileInput').click()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                                Seleccionar Archivos
+                            </button>
+                            <div class="mt-4 text-xs text-gray-500">
+                                Formatos: PDF, JPG, PNG, MP4 • Tamaño máximo: 10MB
+                            </div>
+                        </div>
+
+                        <!-- Document Type Selection -->
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="documentType">
+                                <option>Seleccionar tipo...</option>
+                                <option>Identificación Oficial</option>
+                                <option>Comprobante de Domicilio</option>
+                                <option>Certificado de Estudios</option>
+                                <option>Contrato de Trabajo</option>
+                                <option>RFC</option>
+                                <option>CURP</option>
+                                <option>Otros</option>
+                            </select>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div class="mt-6 hidden" id="uploadProgress">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Subiendo archivo...</span>
+                                <span class="text-sm text-gray-600" data-bind="uploadProgress">65%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 65%" data-bind="progressBar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Camera Capture -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Capturar con Cámara</h3>
+                        
+                        <!-- Camera Preview -->
+                        <div class="bg-gray-900 rounded-xl overflow-hidden mb-6" style="aspect-ratio: 4/3;">
+                            <video id="cameraPreview" autoplay muted class="w-full h-full object-cover" data-implementation="Implement camera access"></video>
+                            <div class="flex items-center justify-center h-full bg-gray-100" id="cameraPlaceholder">
+                                <div class="text-center">
+                                    <i class="fas fa-camera text-gray-400 text-4xl mb-4"></i>
+                                    <p class="text-gray-600">Haz clic para activar la cámara</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Camera Controls -->
+                        <div class="flex space-x-4 mb-6">
+                            <button id="startCamera" class="flex-1 bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition duration-200" data-event="click:startCamera">
+                                <i class="fas fa-camera mr-2"></i>
+                                Activar Cámara
+                            </button>
+                            <button id="capturePhoto" class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-green-700 transition duration-200 hidden" data-event="click:capturePhoto">
+                                <i class="fas fa-circle mr-2"></i>
+                                Capturar
+                            </button>
+                        </div>
+
+                        <!-- Capture Tips -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <h4 class="font-medium text-blue-900 mb-2">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                Consejos para mejor captura
+                            </h4>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li>• Asegúrate de tener buena iluminación</li>
+                                <li>• Mantén el documento plano y completo en el encuadre</li>
+                                <li>• Evita sombras y reflejos</li>
+                                <li>• Mantén la cámara estable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Uploads -->
+                <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6">Archivos Subidos Recientemente</h3>
+                    <div class="space-y-4">
+                        <!-- @MAP: recentUploads.map(upload => ( -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-file-pdf text-red-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900" data-bind="upload.filename">contrato_trabajo.pdf</p>
+                                    <p class="text-sm text-gray-600" data-bind="upload.uploadTime">Subido hace 2 horas • 2.4 MB</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium" data-bind="upload.status">Procesado</span>
+                                <button class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="text-gray-400 hover:text-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documents Section -->
+            <section id="documents-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Mis Documentos</h2>
+                    <p class="text-gray-600">Administra todos tus documentos subidos</p>
+                </div>
+
+                <!-- Filter & Search -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                    <div class="grid md:grid-cols-4 gap-4">
+                        <div>
+                            <input type="text" placeholder="Buscar documentos..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-implementation="Search functionality">
+                        </div>
+                        <div>
+                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option>Todos los tipos</option>
+                                <option>Identificación</option>
+                                <option>Comprobantes</option>
+                                <option>Certificados</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option>Todos los estados</option>
+                                <option>Procesado</option>
+                                <option>Pendiente</option>
+                                <option>Rechazado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Grid -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- @MAP: documents.map(document => ( -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <!-- Document Preview -->
+                        <div class="aspect-video bg-gray-100 flex items-center justify-center">
+                            <i class="fas fa-file-pdf text-red-500 text-4xl" data-bind="document.icon"></i>
+                        </div>
+                        
+                        <!-- Document Info -->
+                        <div class="p-4">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="font-medium text-gray-900 text-sm" data-bind="document.name">Contrato_Trabajo.pdf</h3>
+                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium" data-bind="document.status">Procesado</span>
+                            </div>
+                            <p class="text-xs text-gray-600 mb-2" data-bind="document.type">Contrato de Trabajo</p>
+                            <p class="text-xs text-gray-500 mb-3" data-bind="document.uploadDate">Subido: 12 Nov 2024, 14:30</p>
+                            
+                            <!-- Actions -->
+                            <div class="flex space-x-2">
+                                <button class="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-xs hover:bg-gray-200 transition duration-200" data-event="click:viewDocument">
+                                    <i class="fas fa-eye mr-1"></i> Ver
+                                </button>
+                                <button class="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-xs hover:bg-gray-200 transition duration-200" data-event="click:downloadDocument">
+                                    <i class="fas fa-download mr-1"></i> Descargar
+                                </button>
+                                <button class="bg-red-100 text-red-700 px-3 py-2 rounded-lg text-xs hover:bg-red-200 transition duration-200" data-event="click:deleteDocument">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </section>
+
+            <!-- Admin Dashboard Section -->
+            <section id="admin-dashboard-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Panel de Administración</h2>
+                    <p class="text-gray-600">Estadísticas y métricas de cumplimiento del sistema</p>
+                </div>
+
+                <!-- Admin Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Total Usuarios</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" data-bind="adminStats.totalUsers">158</p>
+                                <p class="text-green-600 text-sm mt-1">+12 este mes</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-users text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Documentos Totales</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" data-bind="adminStats.totalDocuments">1,247</p>
+                                <p class="text-green-600 text-sm mt-1">+89 esta semana</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-file-alt text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Cumplimiento Global</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" data-bind="adminStats.compliance">87%</p>
+                                <p class="text-red-600 text-sm mt-1">-2% vs mes anterior</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-chart-pie text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Documentos Vencidos</p>
+                                <p class="text-3xl font-bold text-red-600 mt-2" data-bind="adminStats.overdue">23</p>
+                                <p class="text-red-600 text-sm mt-1">Requieren acción</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Analytics -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Compliance Chart -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Cumplimiento por Departamento</h3>
+                        <div class="space-y-4">
+                            <!-- @MAP: departmentCompliance.map(dept => ( -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700" data-bind="dept.name">Recursos Humanos</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 95%" data-bind="dept.percentage"></div>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 w-12 text-right" data-bind="dept.percentage">95%</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700" data-bind="dept.name">Finanzas</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 78%" data-bind="dept.percentage"></div>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 w-12 text-right" data-bind="dept.percentage">78%</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700" data-bind="dept.name">IT</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 92%" data-bind="dept.percentage"></div>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 w-12 text-right" data-bind="dept.percentage">92%</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700" data-bind="dept.name">Marketing</span>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full" style="width: 65%" data-bind="dept.percentage"></div>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 w-12 text-right" data-bind="dept.percentage">65%</span>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+
+                    <!-- Document Types -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-6">Tipos de Documentos Más Solicitados</h3>
+                        <div class="space-y-4">
+                            <!-- @MAP: documentTypes.map(type => ( -->
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-id-card text-blue-600 text-sm" data-bind="type.icon"></i>
+                                    </div>
+                                    <span class="font-medium text-gray-900" data-bind="type.name">Identificación Oficial</span>
+                                </div>
+                                <span class="text-gray-600 font-medium" data-bind="type.count">158</span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-home text-green-600 text-sm" data-bind="type.icon"></i>
+                                    </div>
+                                    <span class="font-medium text-gray-900" data-bind="type.name">Comprobante de Domicilio</span>
+                                </div>
+                                <span class="text-gray-600 font-medium" data-bind="type.count">142</span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-graduation-cap text-purple-600 text-sm" data-bind="type.icon"></i>
+                                    </div>
+                                    <span class="font-medium text-gray-900" data-bind="type.name">Certificado de Estudios</span>
+                                </div>
+                                <span class="text-gray-600 font-medium" data-bind="type.count">89</span>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Status Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900">Estado de Usuarios</h3>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200" data-event="click:exportReport">
+                            <i class="fas fa-download mr-2"></i>
+                            Exportar Reporte
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Usuario</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Departamento</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Documentos</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Estado</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Última Actividad</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- @MAP: users.map(user => ( -->
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+                                                <span class="text-white text-xs font-medium" data-bind="user.initials">JP</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-900" data-bind="user.name">Juan Pérez</p>
+                                                <p class="text-sm text-gray-600" data-bind="user.email">juan.perez@empresa.com</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600" data-bind="user.department">Recursos Humanos</td>
+                                    <td class="py-4 px-4">
+                                        <span class="text-sm font-medium text-gray-900" data-bind="user.documentsCount">8/10</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium" data-bind="user.status">Completo</span>
+                                    </td>
+                                    <td class="py-4 px-4 text-sm text-gray-600" data-bind="user.lastActivity">Hace 2 horas</td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-blue-700" data-event="click:sendReminder">
+                                                <i class="fas fa-bell text-sm"></i>
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-900" data-event="click:viewUserDetails">
+                                                <i class="fas fa-eye text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Other sections (deadlines, notifications, user-management, reminders) would follow similar patterns -->
+            <!-- For brevity, I'm including placeholders -->
+            
+            <section id="deadlines-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Fechas Límite</h2>
+                    <p class="text-gray-600">Gestiona las fechas límite de todos los documentos</p>
+                </div>
+                <!-- Content would go here -->
+            </section>
+
+            <section id="notifications-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Configuración de Notificaciones</h2>
+                    <p class="text-gray-600">Personaliza cómo y cuándo recibir notificaciones</p>
+                </div>
+                <!-- Content would go here -->
+            </section>
+
+            <section id="user-management-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h2>
+                    <p class="text-gray-600">Administra usuarios y sus permisos</p>
+                </div>
+                <!-- Content would go here -->
+            </section>
+
+            <section id="reminders-section" class="content-section hidden">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Sistema de Recordatorios</h2>
+                    <p class="text-gray-600">Configura recordatorios automáticos</p>
+                </div>
+                <!-- Content would go here -->
+            </section>
+
+        </main>
+    </div>
+</div>
+<!-- @END_COMPONENT: MainApplication -->
+
+<!-- @COMPONENT: ToastNotifications -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2">
+    <!-- Toast notifications will be dynamically inserted here -->
+</div>
+<!-- @END_COMPONENT: ToastNotifications -->
+
+<script>
+(function() {
+    // TODO: Implement business logic, API calls, and state management
+    // TODO: Integrate with Firestore database
+    // TODO: Implement file upload with validation and storage
+    // TODO: Add camera API integration for document capture
+    // TODO: Set up email/SMS notification system
+    // TODO: Implement push notifications
+    // TODO: Add user authentication and role management
+    // TODO: Create reminder scheduling system
+    // TODO: Build comprehensive reporting and analytics
+
+    // Navigation and UI state management
+    let currentSection = 'dashboard';
+    let isAdmin = true; // TODO: Get from user authentication
+
+    function showSection(sectionName) {
+        // Hide all sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.add('hidden');
+        });
+        
+        // Show selected section
+        const targetSection = document.getElementById(sectionName + '-section');
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+        }
+        
+        // Update navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active', 'bg-primary', 'text-white');
+            link.classList.add('text-gray-700', 'hover:bg-gray-100');
+        });
+        
+        const activeLink = event?.target.closest('.nav-link');
+        if (activeLink) {
+            activeLink.classList.add('active', 'bg-primary', 'text-white');
+            activeLink.classList.remove('text-gray-700', 'hover:bg-gray-100');
+        }
+        
+        currentSection = sectionName;
+    }
+
+    function showDashboard() {
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        showSection('dashboard');
+    }
+
+    function showLogin() {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+    }
+
+    function showRegister() {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('-translate-x-full');
+    }
+
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        
+        const bgColor = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            warning: 'bg-orange-500',
+            info: 'bg-blue-500'
+        }[type] || 'bg-blue-500';
+        
+        toast.className = `${bgColor} text-white px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto remove
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    // File upload handlers
+    function handleFileUpload() {
+        // TODO: Implement file validation, upload to storage, and Firestore integration
+        showToast('Archivo subido exitosamente', 'success');
+    }
+
+    function handleCameraCapture() {
+        // TODO: Implement camera API integration
+        showToast('Foto capturada exitosamente', 'success');
+    }
+
+    // Global function assignments for onclick handlers
+    window.showSection = showSection;
+    window.showDashboard = showDashboard;
+    window.showLogin = showLogin;
+    window.showRegister = showRegister;
+    window.toggleSidebar = toggleSidebar;
+
+    // Event listeners
+    document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const toggleButton = document.getElementById('toggleSidebar');
+        
+        if (window.innerWidth < 1024 && 
+            !sidebar.contains(event.target) && 
+            !toggleButton.contains(event.target)) {
+            sidebar.classList.add('-translate-x-full');
+        }
+    });
+
+    // File drop zone handlers
+    const dropzone = document.getElementById('dropzone');
+    if (dropzone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+
+        dropzone.addEventListener('drop', handleDrop, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dropzone.classList.add('border-primary', 'bg-blue-50');
+        }
+
+        function unhighlight(e) {
+            dropzone.classList.remove('border-primary', 'bg-blue-50');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            // TODO: Implement file processing and upload
+            showToast(`${files.length} archivo(s) seleccionado(s)`, 'info');
+        }
+    }
+
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show login modal on load
+        document.getElementById('authModal').classList.remove('hidden');
+        
+        // For demo purposes, show admin sections if user is admin
+        if (isAdmin) {
+            document.querySelectorAll('[data-role="admin"]').forEach(el => {
+                el.classList.remove('hidden');
+            });
+        }
+    });
+
+})();
+</script>
+
+</body>
+</html>
