@@ -64,11 +64,11 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Default to 3000 if not specified.
-  const port = parseInt(process.env.PORT || "3000", 10);
+  // Default to 5000 for Replit compatibility if not specified.
+  const port = parseInt(process.env.PORT || "5000", 10);
 
-  // En Windows usar localhost o 127.0.0.1 (0.0.0.0 + reusePort fallan)
-  server.listen(port, "127.0.0.1", () => {
-    log(`🚀 Server running at http://127.0.0.1:${port}`);
+  // Bind to 0.0.0.0 for Replit compatibility
+  server.listen(port, "0.0.0.0", () => {
+    log(`🚀 Server running at http://0.0.0.0:${port}`);
   });
 })();
