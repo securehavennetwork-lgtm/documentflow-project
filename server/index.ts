@@ -1,7 +1,11 @@
+import "dotenv/config";  // 👈 Esto debe ir primero
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { testConnection } from "./database";
+
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Loaded' : 'Not found');
 
 const app = express();
 app.use(express.json());
@@ -72,3 +76,5 @@ app.use((req, res, next) => {
     log(`🚀 Server running at http://0.0.0.0:${port}`);
   });
 })();
+
+

@@ -1,13 +1,21 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import * as schema from '@shared/schema';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "@shared/schema";
 
-// Configuración de base de datos
-const connectionString = process.env.DATABASE_URL || 'postgresql://localhost:5432/documentflow';
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("❌ DATABASE_URL is not defined in .env");
+}
+
+console.log("📡 Using connection string:", connectionString.replace(/:.*@/, ":****@")); 
+// <-- esto enmascara tu password, pero confirma que sí se carga
 
 const pool = new Pool({
   connectionString,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: {
+    rejectUnauthorized: false, // necesario para Neon
+  },
 });
 
 export const db = drizzle(pool, { schema });
@@ -16,11 +24,11 @@ export const db = drizzle(pool, { schema });
 export async function testConnection() {
   try {
     const client = await pool.connect();
-    console.log('✅ Database connected successfully');
+    console.log("✅ Database connected successfully");
     client.release();
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error("❌ Database connection failed:", error);
     return false;
   }
 }
