@@ -6,7 +6,7 @@ export class EmailService {
 
   constructor() {
     // Configure nodemailer with environment variables
-    this.transporter = nodemailer.createTransport({
+    this.transporter = nodemailer.createTransporter({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false, // true for 465, false for other ports
@@ -15,6 +15,18 @@ export class EmailService {
         pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
       },
     });
+
+    // Verify connection configuration
+    this.verifyConnection();
+  }
+
+  private async verifyConnection(): Promise<void> {
+    try {
+      await this.transporter.verify();
+      console.log('✅ Email service ready');
+    } catch (error) {
+      console.error('❌ Email service configuration error:', error);
+    }
   }
 
   async sendDocumentUploadNotification(userId: string, document: Document): Promise<void> {
@@ -28,9 +40,9 @@ export class EmailService {
       };
 
       await this.transporter.sendMail(mailOptions);
-      console.log('Document upload notification sent successfully');
+      console.log('✅ Document upload notification sent successfully');
     } catch (error) {
-      console.error('Error sending document upload notification:', error);
+      console.error('❌ Error sending document upload notification:', error);
       throw error;
     }
   }
@@ -53,9 +65,9 @@ export class EmailService {
         await this.transporter.sendMail(mailOptions);
       }
 
-      console.log('Reminder notifications sent successfully');
+      console.log('✅ Reminder notifications sent successfully');
     } catch (error) {
-      console.error('Error sending reminder notifications:', error);
+      console.error('❌ Error sending reminder notifications:', error);
       throw error;
     }
   }
@@ -70,9 +82,9 @@ export class EmailService {
       };
 
       await this.transporter.sendMail(mailOptions);
-      console.log('Deadline notification sent successfully');
+      console.log('✅ Deadline notification sent successfully');
     } catch (error) {
-      console.error('Error sending deadline notification:', error);
+      console.error('❌ Error sending deadline notification:', error);
       throw error;
     }
   }
@@ -127,7 +139,7 @@ export class EmailService {
   }
 
   private getReminderTemplate(reminder: Reminder, deadline: Deadline): string {
-    const dueDate = new Date(reminder.reminderTime);
+    const dueDate = new Date(deadline.dueDate);
     const formattedDate = dueDate.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',

@@ -4,8 +4,11 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { testConnection } from "./database";
+import { supabaseStorage } from "./services/supabaseStorage";
 
 console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Loaded' : 'Not found');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Loaded' : 'Not found');
+console.log('SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'Loaded' : 'Not found');
 
 const app = express();
 app.use(express.json());

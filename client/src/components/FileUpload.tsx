@@ -8,8 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CloudUpload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 
 const ALLOWED_TYPES = {
   'application/pdf': 'pdf',
@@ -20,7 +18,7 @@ const ALLOWED_TYPES = {
   'video/quicktime': 'video'
 };
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 export default function FileUpload() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -45,7 +43,7 @@ export default function FileUpload() {
     if (file.size > MAX_FILE_SIZE) {
       toast({
         title: "Archivo demasiado grande",
-        description: `El archivo ${file.name} excede el tamaño máximo de 10MB.`,
+        description: `El archivo ${file.name} excede el tamaño máximo de 50MB.`,
         variant: "destructive"
       });
       return false;
@@ -184,7 +182,7 @@ export default function FileUpload() {
             Seleccionar Archivos
           </Button>
           <div className="mt-4 text-xs text-gray-500">
-            Formatos: PDF, JPG, PNG, GIF, MP4 • Tamaño máximo: 10MB
+            Formatos: PDF, JPG, PNG, GIF, MP4 • Tamaño máximo: 50MB
           </div>
         </div>
 

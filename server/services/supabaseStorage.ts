@@ -10,16 +10,27 @@ export class SupabaseStorageService {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
     
     if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase URL and Service Key are required');
+      console.warn('⚠️  Supabase credentials not found, storage will use local fallback');
+      // Don't throw error, allow fallback to local storage
+      return;
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseServiceKey);
+    try {
+      this.supabase = createClient(supabaseUrl, supabaseServiceKey);
+      console.log('✅ Supabase client initialized');
+    } catch (error) {
+      console.error('❌ Error initializing Supabase client:', error);
+    }
   }
 
   /**
    * Upload a file to Supabase Storage
    */
   async uploadFile(buffer: Buffer, filename: string, userId: string, contentType?: string): Promise<string> {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       // Create unique path: userId/timestamp-filename
       const timestamp = Date.now();
@@ -51,6 +62,10 @@ export class SupabaseStorageService {
    * Delete a file from Supabase Storage
    */
   async deleteFile(filePath: string): Promise<void> {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       const { error } = await this.supabase.storage
         .from(this.bucketName)
@@ -72,6 +87,10 @@ export class SupabaseStorageService {
    * Get public URL for a file
    */
   getPublicUrl(filePath: string): string {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     const { data } = this.supabase.storage
       .from(this.bucketName)
       .getPublicUrl(filePath);
@@ -83,6 +102,10 @@ export class SupabaseStorageService {
    * Create a signed URL with expiration (for private files)
    */
   async createSignedUrl(filePath: string, expiresIn: number = 3600): Promise<string> {
+    if (!this.supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       const { data, error } = await this.supabase.storage
         .from(this.bucketName)
@@ -103,6 +126,11 @@ export class SupabaseStorageService {
    * Initialize storage bucket (create if doesn't exist)
    */
   async initializeBucket(): Promise<void> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase client not initialized, skipping bucket initialization');
+      return;
+    }
+
     try {
       // Check if bucket exists
       const { data: buckets, error: listError } = await this.supabase.storage.listBuckets();
@@ -145,6 +173,11 @@ export class SupabaseStorageService {
    * Check if Supabase connection is working
    */
   async testConnection(): Promise<boolean> {
+    if (!this.supabase) {
+      console.warn('⚠️  Supabase client not initialized');
+      return false;
+    }
+
     try {
       const { data, error } = await this.supabase.storage.listBuckets();
       

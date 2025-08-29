@@ -33,6 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       res.json(user);
     } catch (error: any) {
+      console.error('Error creating user:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -45,6 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(user);
     } catch (error: any) {
+      console.error('Error getting user profile:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -54,6 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getUserStats(req.params.userId);
       res.json(stats);
     } catch (error: any) {
+      console.error('Error getting user stats:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -63,6 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activity = await storage.getUserActivity(req.params.userId);
       res.json(activity);
     } catch (error: any) {
+      console.error('Error getting user activity:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -72,6 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // TODO: Implement notification settings update
       res.json({ message: 'Settings updated successfully' });
     } catch (error: any) {
+      console.error('Error updating notification settings:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -94,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const extension = path.extname(originalName);
       const filename = `${timestamp}-${originalName}`;
 
-      // Save file to local storage
+      // Save file using storage service
       const storageUrl = await storage.saveFile(req.file.buffer, filename, userId);
 
       // Determine file type
@@ -141,6 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       res.json(documents);
     } catch (error: any) {
+      console.error('Error getting user documents:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -150,6 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documents = await storage.getUserDocuments(req.params.userId, { limit: 5 });
       res.json(documents);
     } catch (error: any) {
+      console.error('Error getting recent documents:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -160,6 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const document = await storage.updateDocumentStatus(req.params.documentId, status);
       res.json(document);
     } catch (error: any) {
+      console.error('Error updating document status:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -169,6 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteDocument(req.params.documentId);
       res.json({ message: 'Document deleted successfully' });
     } catch (error: any) {
+      console.error('Error deleting document:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -180,6 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deadline = await storage.createDeadline(deadlineData);
       res.json(deadline);
     } catch (error: any) {
+      console.error('Error creating deadline:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -189,6 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deadlines = await storage.getUserDeadlines(req.params.userId);
       res.json(deadlines);
     } catch (error: any) {
+      console.error('Error getting user deadlines:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -198,6 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deadlines = await storage.getUpcomingDeadlines(req.params.userId);
       res.json(deadlines);
     } catch (error: any) {
+      console.error('Error getting upcoming deadlines:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -208,6 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deadline = await storage.updateDeadline(req.params.deadlineId, updates);
       res.json(deadline);
     } catch (error: any) {
+      console.error('Error updating deadline:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -217,6 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteDeadline(req.params.deadlineId);
       res.json({ message: 'Deadline deleted successfully' });
     } catch (error: any) {
+      console.error('Error deleting deadline:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -228,6 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const notification = await storage.createNotification(notificationData);
       res.json(notification);
     } catch (error: any) {
+      console.error('Error creating notification:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -237,6 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const notifications = await storage.getUserNotifications(req.params.userId);
       res.json(notifications);
     } catch (error: any) {
+      console.error('Error getting user notifications:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -246,6 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.markNotificationAsRead(req.params.notificationId);
       res.json({ message: 'Notification marked as read' });
     } catch (error: any) {
+      console.error('Error marking notification as read:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -255,6 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteNotification(req.params.notificationId);
       res.json({ message: 'Notification deleted successfully' });
     } catch (error: any) {
+      console.error('Error deleting notification:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -265,6 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getAdminStats();
       res.json(stats);
     } catch (error: any) {
+      console.error('Error getting admin stats:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -274,6 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const compliance = await storage.getComplianceByDepartment();
       res.json(compliance);
     } catch (error: any) {
+      console.error('Error getting compliance by department:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -283,6 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const types = await storage.getDocumentTypeStats();
       res.json(types);
     } catch (error: any) {
+      console.error('Error getting document type stats:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -292,6 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getUsersWithStatus();
       res.json(users);
     } catch (error: any) {
+      console.error('Error getting users with status:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -305,6 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       res.json(users);
     } catch (error: any) {
+      console.error('Error getting all users:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -314,6 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const departments = await storage.getDepartments();
       res.json(departments);
     } catch (error: any) {
+      console.error('Error getting departments:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -347,6 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(documentsWithUsers);
     } catch (error: any) {
+      console.error('Error getting admin documents:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -357,6 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       res.json(user);
     } catch (error: any) {
+      console.error('Error creating admin user:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -367,6 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.updateUser(req.params.userId, updates);
       res.json(user);
     } catch (error: any) {
+      console.error('Error updating admin user:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -376,6 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteUser(req.params.userId);
       res.json({ message: 'User deleted successfully' });
     } catch (error: any) {
+      console.error('Error deleting admin user:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -386,6 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reminders = await storage.getAllReminders();
       res.json(reminders);
     } catch (error: any) {
+      console.error('Error getting all reminders:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -396,6 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reminder = await storage.createReminder(reminderData);
       res.json(reminder);
     } catch (error: any) {
+      console.error('Error creating reminder:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -406,6 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reminder = await storage.updateReminder(req.params.reminderId, updates);
       res.json(reminder);
     } catch (error: any) {
+      console.error('Error updating reminder:', error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -415,6 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteReminder(req.params.reminderId);
       res.json({ message: 'Reminder deleted successfully' });
     } catch (error: any) {
+      console.error('Error deleting reminder:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -431,10 +463,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!deadline) {
         return res.status(404).json({ message: 'Associated deadline not found' });
       }
+      
       await emailService.sendReminderNotification(reminder, deadline);
       
       res.json({ message: 'Reminder sent successfully' });
     } catch (error: any) {
+      console.error('Error sending reminder:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -444,6 +478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // TODO: Generate and export compliance report
       res.json({ message: 'Report export feature coming soon' });
     } catch (error: any) {
+      console.error('Error exporting compliance report:', error);
       res.status(500).json({ message: error.message });
     }
   });
